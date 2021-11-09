@@ -207,6 +207,10 @@ impl Callable for Constructor {
         true
     }
 
+    fn is_wildcard_selector(&self) -> bool {
+        false
+    }
+
     fn visibility(&self) -> Visibility {
         match &self.item.vis {
             syn::Visibility::Public(vis_public) => Visibility::Public(vis_public.clone()),

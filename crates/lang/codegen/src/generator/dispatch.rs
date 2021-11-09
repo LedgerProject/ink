@@ -24,6 +24,7 @@ use ir::{
     Callable,
     HexLiteral as _,
 };
+use itertools::Itertools;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{
     quote,
@@ -112,6 +113,17 @@ impl Dispatch<'_> {
             .map(|item_impl| item_impl.iter_messages())
             .flatten()
             .count()
+    }
+
+    /// Returns the index of the ink! message which has a wildcard selector, if existent.
+    fn query_wildcard_message(&self) -> Option<usize> {
+        self.contract
+            .module()
+            .impls()
+            .map(|item_impl| item_impl.iter_messages())
+            .flatten()
+            .find_position(|item| item.is_wildcard_selector())
+            .map(|(index, _)| index)
     }
 
     /// Generates code for the [`ink_lang::ContractDispatchables`] trait implementation.
@@ -631,6 +643,28 @@ impl Dispatch<'_> {
                 }
             )
         });
+        let wildcard_index = self.query_wildcard_message();
+        let possibly_wildcard_selector_message = match wildcard_index {
+            Some(index) => {
+                let message_span = message_spans[index];
+                let message_ident = message_variant_ident(index);
+                let message_input =
+                    expand_message_input(message_span, storage_ident, index);
+                quote_spanned!(message_span=>
+                        ::core::result::Result::Ok(Self::#message_ident(
+                            <#message_input as ::scale::Decode>::decode(input)
+                                .map_err(|_| ::ink_lang::reflect::DispatchError::InvalidParameters)?
+                        ))
+                )
+            }
+            None => {
+                quote! {
+                    ink_env::debug_println!("no selector available: 22");
+                    // do we have a wildcard selector which we could use?
+                    ::core::result::Result::Err(::ink_lang::reflect::DispatchError::UnknownSelector)
+                }
+            }
+        };
         let any_message_accept_payment =
             self.any_message_accepts_payment_expr(message_spans);
         let message_execute = (0..count_messages).map(|index| {
@@ -713,9 +747,10 @@ impl Dispatch<'_> {
                             .map_err(|_| ::ink_lang::reflect::DispatchError::InvalidSelector)?
                         {
                             #( #message_match , )*
-                            _invalid => ::core::result::Result::Err(
-                                ::ink_lang::reflect::DispatchError::UnknownSelector
-                            )
+                            _invalid => {
+                                ink_env::debug_println!("no selector available: 11");
+                                #possibly_wildcard_selector_message
+                            }
                         }
                     }
                 }

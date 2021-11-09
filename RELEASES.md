@@ -7,6 +7,7 @@ This is the 7th release candidate for ink! 3.0.
     - Some of those traits and their carried information can be used for static reflection of ink!
       smart contracts. Those types and traits reside in the new `ink_lang::reflect` module and is
       publicly usable by ink! smart contract authors.
+- Added support for wildcard selectors ‒ [#XXX](https://github.com/paritytech/ink/pull/960).
 
 ## Changed
 - Upgraded to the unstable `seal_call` API ‒ [#960](https://github.com/paritytech/ink/pull/960).

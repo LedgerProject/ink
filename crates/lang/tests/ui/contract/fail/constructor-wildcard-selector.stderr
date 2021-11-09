@@ -1,0 +1,5 @@
+error: encountered conflicting ink! attribute argument
+ --> tests/ui/contract/fail/constructor-wildcard-selector.rs:9:28
+  |
+9 |         #[ink(constructor, selector = "_")]
+  |                            ^^^^^^^^^^^^^^

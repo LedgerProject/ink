@@ -85,6 +85,7 @@ impl<'a> InkTraitMessage<'a> {
                 match arg.kind() {
                     ir::AttributeArg::Message
                     | ir::AttributeArg::Payable
+                    | ir::AttributeArg::WildcardSelector
                     | ir::AttributeArg::Selector(_) => Ok(()),
                     _ => Err(None),
                 }

@@ -69,6 +69,8 @@ impl TryFrom<ast::AttributeArgs> for TraitDefinitionConfig {
 
     fn try_from(args: ast::AttributeArgs) -> Result<Self, Self::Error> {
         let mut namespace: Option<(syn::LitStr, ast::MetaNameValue)> = None;
+        //let mut selector: Option<(syn::LitStr, ast::MetaNameValue)> = None;
+        let mut selector: Option<ast::MetaNameValue> = None;
         for arg in args.into_iter() {
             if arg.name.is_ident("namespace") {
                 if let Some((_, meta_name_value)) = namespace {
@@ -88,6 +90,11 @@ impl TryFrom<ast::AttributeArgs> for TraitDefinitionConfig {
                         "expected a string literal for `namespace` ink! trait definition configuration argument",
                     ))
                 }
+            } else if arg.name.is_ident("selector") {
+                if let Some(fst) = selector {
+                    return Err(duplicate_config_err(fst, arg, "selector"))
+                }
+                selector = Some(arg)
             } else {
                 return Err(format_err_spanned!(
                     arg,

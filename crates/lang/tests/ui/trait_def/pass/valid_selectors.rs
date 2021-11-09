@@ -10,6 +10,9 @@ pub trait TraitDefinition {
 
     #[ink(message, selector = 0xC0DECAFE)]
     fn message3(&mut self);
+
+    #[ink(message, selector = "_")]
+    fn message4(&mut self);
 }
 
 use ink_env::DefaultEnvironment;
